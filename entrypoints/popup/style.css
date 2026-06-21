@@ -1,9 +1,25 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Color Palette (Dark Mode Base) */
+  --bg-app: #1A1A1A;
+  --bg-card: #242424;
+  --bg-card-hover: #2A2A2A;
+  --bg-well: #141414;
+  --text-primary: #EDEDED;
+  --text-muted: #888888;
+  --border-subtle: #333333;
+  --accent-local: #4ADE80;
+  --accent-remote: #60A5FA;
+
+  /* Typography */
+  --font-ui: Inter, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Base styles */
+  font-family: var(--font-ui);
   line-height: 1.5;
   font-weight: 400;
-  color: #213547;
-  background-color: #fff;
+  color: var(--text-primary);
+  background-color: var(--bg-app);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -22,15 +38,17 @@ body {
 
 button {
   border-radius: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-subtle);
   padding: 4px 12px;
   font-size: 13px;
   font-weight: 500;
-  font-family: inherit;
-  background-color: #f5f5f5;
+  font-family: var(--font-ui);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
   cursor: pointer;
 }
 
 button:hover {
-  border-color: #888;
+  border-color: var(--text-muted);
+  background-color: var(--bg-card-hover);
 }

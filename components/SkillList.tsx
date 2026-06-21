@@ -1,5 +1,6 @@
 import type { Skill } from "@/utils/models/db"
 import SkillCard from "./SkillCard"
+import styles from "@/entrypoints/popup/App.module.css"
 
 interface SkillListProps {
   skills: Skill[]
@@ -10,14 +11,14 @@ interface SkillListProps {
 const SkillList = ({ skills, onCopy, onDelete }: SkillListProps) => {
   if (skills.length === 0) {
     return (
-      <p style={{ textAlign: "center", color: "#888", marginTop: 32 }}>
+      <p className={styles.skillListEmpty}>
         No skills yet. Import your first skill above.
       </p>
     )
   }
 
   return (
-    <div style={{ marginTop: 12 }}>
+    <div>
       {skills.map((skill) => (
         <SkillCard
           key={skill.id}

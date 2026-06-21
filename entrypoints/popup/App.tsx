@@ -7,6 +7,7 @@ import ImportButton from "@/components/ImportButton"
 import SkillList from "@/components/SkillList"
 import AddPrompt from "@/components/AddPrompt"
 import Toast from "@/components/Toast"
+import styles from "./App.module.css"
 
 function App() {
   const skills = useSkills()
@@ -87,16 +88,9 @@ function App() {
   )
 
   return (
-    <div style={{ padding: 16 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 8,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>Skills</h2>
+    <div className={styles.app}>
+      <div className={styles.header}>
+        <h2>Skills</h2>
         <ImportButton />
       </div>
       {scraped && !scraped.isDuplicate && (

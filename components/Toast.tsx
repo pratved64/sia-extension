@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import styles from "@/entrypoints/popup/App.module.css"
 
 interface ToastProps {
   message: string
@@ -16,20 +17,7 @@ const Toast = ({ message, visible, onDismiss }: ToastProps) => {
   if (!visible) return null
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 16,
-        left: "50%",
-        transform: "translateX(-50%)",
-        background: "#333",
-        color: "#fff",
-        padding: "8px 16px",
-        borderRadius: 8,
-        fontSize: 14,
-        zIndex: 1000,
-      }}
-    >
+    <div className={styles.toast}>
       {message}
     </div>
   )
