@@ -81,6 +81,13 @@
   border-radius: 8px;
   margin-bottom: 8px;
   overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 0fr;
+  transition: grid-template-rows 0.2s ease;
+}
+
+.card[data-expanded="true"] {
+  grid-template-rows: auto 1fr;
 }
 
 .cardRow {
@@ -112,6 +119,12 @@
   color: var(--text-muted);
   flex-shrink: 0;
   line-height: 1;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.cardArrow[data-expanded="true"] {
+  transform: rotate(90deg);
 }
 
 .cardName {
@@ -148,6 +161,8 @@
 .cardExpanded {
   padding: 0 16px 12px 16px;
   cursor: default;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .cardMeta {

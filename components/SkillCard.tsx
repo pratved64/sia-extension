@@ -17,14 +17,14 @@ const SkillCard = ({ skill, onCopy, onDelete }: SkillCardProps) => {
     skill.origin === "local" ? styles.originBadgeLocal : styles.originBadgeRemote
 
   return (
-    <div className={styles.card}>
+    <div className={styles.card} data-expanded={expanded}>
       <div
         className={styles.cardRow}
         onClick={() => setExpanded((p) => !p)}
       >
         <div className={styles.cardLeft}>
-          <span className={styles.cardArrow}>
-            {expanded ? "▼" : "▶"}
+          <span className={styles.cardArrow} data-expanded={expanded}>
+            ▶
           </span>
           <strong className={styles.cardName}>
             {skill.name}
@@ -48,29 +48,27 @@ const SkillCard = ({ skill, onCopy, onDelete }: SkillCardProps) => {
           </span>
         </div>
       </div>
-      {expanded && (
-        <div className={styles.cardExpanded}>
-          <div className={styles.cardMeta}>
-            <div className={styles.cardMetaRow}>
-              Source: {skill.origin === "local" ? "local" : skill.source}
-            </div>
-            <div className={styles.cardMetaLabel}>
-              Origin:
-              <span className={originBadgeClass}>
-                {skill.origin}
-              </span>
-            </div>
+      <div className={styles.cardExpanded}>
+        <div className={styles.cardMeta}>
+          <div className={styles.cardMetaRow}>
+            Source: {skill.origin === "local" ? "local" : skill.source}
           </div>
-          <div className={styles.well}>
-            {skill.content.slice(0, 200)}
-            {skill.content.length > 200 ? "..." : ""}
-          </div>
-          <div className={styles.cardActions}>
-            <button onClick={() => onCopy(skill.content)}>Copy</button>
-            <button onClick={() => onDelete(skill.id)}>Delete</button>
+          <div className={styles.cardMetaLabel}>
+            Origin:
+            <span className={originBadgeClass}>
+              {skill.origin}
+            </span>
           </div>
         </div>
-      )}
+        <div className={styles.well}>
+          {skill.content.slice(0, 200)}
+          {skill.content.length > 200 ? "..." : ""}
+        </div>
+        <div className={styles.cardActions}>
+          <button onClick={() => onCopy(skill.content)}>Copy</button>
+          <button onClick={() => onDelete(skill.id)}>Delete</button>
+        </div>
+      </div>
     </div>
   )
 }
