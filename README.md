@@ -1,6 +1,22 @@
 # Sia
 
+```
+███████╗██╗ █████╗ 
+██╔════╝██║██╔══██╗
+███████╗██║███████║
+╚════██║██║██╔══██║
+███████║██║██║  ██║
+╚══════╝╚═╝╚═╝  ╚═╝
+```
+
 A browser extension for collecting, managing, and copying prompt skills from [skills.sh](https://skills.sh) to your clipboard.
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
 
 ## Stack
 
@@ -15,10 +31,17 @@ A browser extension for collecting, managing, and copying prompt skills from [sk
 - Copy skill content to clipboard with one click
 - Expandable cards with token estimates, origin badges (local/remote), and markdown preview
 - Duplicate detection via SHA-256 content hashing
+- Filter skills by name or origin (local/remote) via a combined search bar and dropdown
+- Import via drag-and-drop with preview, editable skill names, and duplicate warnings
+- Dark-themed UI using CSS custom properties (no shadows, minimal borders)
+- ASCII logo displayed in the popup and import window
 
 ## Project Structure
 
 ```
+AGENTS.md         Guidance for AI assistants and contributors
+assets/
+  logo.txt          ASCII art logo (imported as raw text)
 entrypoints/
   popup/          Main popup UI — skill list, copy, delete, scraped skill banner
   background.ts   Service worker — manages import window, relays messages
