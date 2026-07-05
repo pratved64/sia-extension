@@ -1,0 +1,226 @@
+* {
+  box-sizing: border-box;
+}
+
+.app {
+  padding: 20px;
+}
+
+.logo {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.15;
+  color: var(--text-primary);
+  white-space: pre;
+  text-align: center;
+}
+
+/* ===== Drop Zone ===== */
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 32px 16px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.dropZone:hover,
+.dropZoneActive {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-remote);
+}
+
+.dropIcon {
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.dropText {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.dropSubtext {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ===== Error ===== */
+.error {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #EF4444;
+}
+
+/* ===== Preview ===== */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===== Duplicate Banner ===== */
+.duplicateBanner {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #FBBF24;
+  text-align: center;
+}
+
+/* ===== Meta Card ===== */
+.metaCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metaLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-ui);
+  min-width: 52px;
+  flex-shrink: 0;
+}
+
+.metaValue {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.nameInput {
+  flex: 1;
+  padding: 4px 8px;
+  background: var(--bg-well);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+}
+
+.nameInput:focus {
+  border-color: var(--accent-remote);
+}
+
+/* ===== Well ===== */
+.well {
+  background: var(--bg-well);
+  border-radius: 6px;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ===== Actions ===== */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnGhost {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btnGhost:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.btnPrimary {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-remote);
+  background: transparent;
+  color: var(--accent-remote);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background-color 0.15s ease;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.btnPrimary:disabled,
+.btnGhost:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ===== File Nav ===== */
+.fileNav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fileNavLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  min-width: 32px;
+  text-align: center;
+}
+
+/* ===== Done ===== */
+.done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding-top: 40px;
+}
+
+.doneMessage {
+  margin: 0;
+  font-size: 16px;
+  color: var(--accent-local);
+  font-weight: 500;
+  text-align: center;
+}

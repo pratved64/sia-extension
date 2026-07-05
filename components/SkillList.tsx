@@ -6,13 +6,14 @@ interface SkillListProps {
   skills: Skill[]
   onCopy: (content: string) => void
   onDelete: (id: number) => void
+  emptyMessage?: string
 }
 
-const SkillList = ({ skills, onCopy, onDelete }: SkillListProps) => {
+const SkillList = ({ skills, onCopy, onDelete, emptyMessage }: SkillListProps) => {
   if (skills.length === 0) {
     return (
       <p className={styles.skillListEmpty}>
-        No skills yet. Import your first skill above.
+        {emptyMessage ?? "No skills yet. Import your first skill above."}
       </p>
     )
   }

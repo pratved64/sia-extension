@@ -22,7 +22,7 @@ export default defineBackground(() => {
         url: browser.runtime.getURL("/import.html"),
         type: "popup",
         width: 400,
-        height: 250,
+        height: 480,
       })
       return Promise.resolve({ accepted: true })
     }

@@ -23,9 +23,9 @@ const SkillCard = ({ skill, onCopy, onDelete }: SkillCardProps) => {
         onClick={() => setExpanded((p) => !p)}
       >
         <div className={styles.cardLeft}>
-          <span className={styles.cardArrow} data-expanded={expanded}>
-            ▶
-          </span>
+          <svg className={styles.cardArrow} data-expanded={expanded} width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
           <strong className={styles.cardName}>
             {skill.name}
           </strong>
@@ -50,23 +50,20 @@ const SkillCard = ({ skill, onCopy, onDelete }: SkillCardProps) => {
       </div>
       <div className={styles.cardExpanded}>
         <div className={styles.cardMeta}>
-          <div className={styles.cardMetaRow}>
-            Source: {skill.origin === "local" ? "local" : skill.source}
-          </div>
-          <div className={styles.cardMetaLabel}>
-            Origin:
-            <span className={originBadgeClass}>
-              {skill.origin}
-            </span>
-          </div>
+          {skill.origin !== "local" && (
+            <span className={styles.cardMetaRow}>{skill.source}</span>
+          )}
+          <span className={originBadgeClass}>
+            {skill.origin}
+          </span>
         </div>
         <div className={styles.well}>
           {skill.content.slice(0, 200)}
           {skill.content.length > 200 ? "..." : ""}
         </div>
         <div className={styles.cardActions}>
-          <button onClick={() => onCopy(skill.content)}>Copy</button>
-          <button onClick={() => onDelete(skill.id)}>Delete</button>
+          <button className={styles.ghostButtonPrimary} onClick={() => onCopy(skill.content)}>Copy</button>
+          <button className={styles.ghostButtonMuted} onClick={() => onDelete(skill.id)}>Delete</button>
         </div>
       </div>
     </div>

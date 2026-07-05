@@ -4,31 +4,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Import Skill</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
+      :root {
+        --bg-app: #1A1A1A;
+        --bg-card: #242424;
+        --bg-card-hover: #2A2A2A;
+        --bg-well: #141414;
+        --text-primary: #EDEDED;
+        --text-muted: #888888;
+        --border-subtle: #333333;
+        --accent-local: #4ADE80;
+        --accent-remote: #60A5FA;
+        --font-ui: Geist, system-ui, sans-serif;
+        --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      }
       body {
-        font-family: Geist, system-ui, Avenir, Helvetica, Arial, sans-serif;
         margin: 0;
-        padding: 24px;
-        text-align: center;
-      }
-      h2 { margin: 0 0 16px; font-size: 18px; }
-      p { color: #666; font-size: 14px; margin: 12px 0; }
-      button {
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        padding: 8px 20px;
+        background: var(--bg-app);
+        color: var(--text-primary);
+        font-family: var(--font-ui);
         font-size: 14px;
-        font-weight: 500;
-        background: #f5f5f5;
-        cursor: pointer;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
       }
-      button:hover { border-color: #888; }
     </style>
   </head>
   <body>
-    <h2>Import Skill</h2>
-    <p id="status">Select a .md file to import</p>
-    <button id="chooseBtn">Choose File</button>
-    <script type="module" src="./main.ts"></script>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
   </body>
 </html>
