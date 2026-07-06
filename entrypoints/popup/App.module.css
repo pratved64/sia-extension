@@ -19,6 +19,28 @@
   gap: 8px;
 }
 
+/* ===== Icon Button ===== */
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.iconBtn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
 /* ===== FilterBar ===== */
 .filterBar {
   display: flex;

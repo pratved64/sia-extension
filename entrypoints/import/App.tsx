@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react"
 import { addSkill, hashContent } from "@/utils/skills"
+import { parseFrontmatter } from "@/utils/backup"
 import { db } from "@/utils/models/db"
 import styles from "./App.module.css"
 
@@ -9,6 +10,8 @@ interface FilePreview {
   file: File
   content: string
   name: string
+  source: string
+  origin: "local" | "remote"
   size: number
   hash: string
   isDuplicate: boolean
@@ -29,7 +32,7 @@ function App() {
   const [files, setFiles] = useState<File[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [previews, setPreviews] = useState<FilePreview[]>([])
-  const [editedName, setEditedName] = useState("")
+  const [editedNames, setEditedNames] = useState<Record<number, string>>({})
   const [result, setResult] = useState("")
   const [importing, setImporting] = useState(false)
   const [dragOver, setDragOver] = useState(false)
@@ -38,6 +41,7 @@ function App() {
   const dropRef = useRef<HTMLDivElement>(null)
 
   const currentPreview = previews[currentIndex] ?? null
+  const currentEditedName = editedNames[currentIndex] ?? currentPreview?.name ?? ""
 
   const readFiles = useCallback(async (rawFiles: FileList | File[]) => {
     const accepted = Array.from(rawFiles).filter(
@@ -53,22 +57,27 @@ function App() {
     const results: FilePreview[] = []
     for (const file of accepted) {
       const text = await file.text()
+      const parsed = parseFrontmatter(text)
       const name = file.name.replace(/\.(md|txt)$/i, "")
-      const hash = await hashContent(text)
+      const hash = await hashContent(parsed.content)
       const existing = await db.skills.where("hash").equals(hash).first()
       results.push({
         file,
-        content: text,
+        content: parsed.content,
         name,
+        source: parsed.source || "local",
+        origin: parsed.origin,
         size: file.size,
         hash,
         isDuplicate: !!existing,
       })
     }
 
+    const nameMap: Record<number, string> = {}
+    results.forEach((r, i) => { nameMap[i] = r.name })
+    setEditedNames(nameMap)
     setPreviews(results)
     setCurrentIndex(0)
-    setEditedName(results[0].name)
     setPage("preview")
   }, [])
 
@@ -111,7 +120,6 @@ function App() {
       const next = dir === "next" ? currentIndex + 1 : currentIndex - 1
       if (next >= 0 && next < previews.length) {
         setCurrentIndex(next)
-        setEditedName(previews[next].name)
       }
     },
     [currentIndex, previews],
@@ -121,34 +129,47 @@ function App() {
     setPreviews([])
     setFiles([])
     setCurrentIndex(0)
+    setEditedNames({})
     setReadError(null)
     setPage("idle")
   }, [])
 
   const handleConfirm = useCallback(async () => {
-    if (!currentPreview || !editedName.trim()) return
+    if (!previews.length) return
     setImporting(true)
 
-    try {
-      const result = await addSkill(
-        editedName.trim(),
-        "local",
-        currentPreview.content,
-        "local",
-      )
-      const msg = result ? "Imported!" : "Already saved"
-      setResult(msg)
-      await browser.runtime.sendMessage({ type: "import-result", result: msg })
-      setPage("done")
-      setTimeout(() => window.close(), 1500)
-    } catch {
-      setResult("Error importing file")
-      setPage("done")
-      setTimeout(() => window.close(), 2000)
+    let imported = 0
+    let errors = 0
+
+    for (let i = 0; i < previews.length; i++) {
+      const preview = previews[i]
+      const name = (editedNames[i] ?? preview.name).trim()
+      if (!name) {
+        errors++
+        continue
+      }
+      try {
+        const result = await addSkill(name, preview.source, preview.content, preview.origin)
+        if (result) imported++
+      } catch {
+        errors++
+      }
     }
 
+    const total = previews.length
+    const parts: string[] = []
+    if (imported > 0) parts.push(`${imported} imported`)
+    const skipped = total - imported - errors
+    if (skipped > 0) parts.push(`${skipped} already saved`)
+    if (errors > 0) parts.push(`${errors} failed`)
+    const msg = parts.join(", ") || "Done"
+
+    setResult(msg)
+    await browser.runtime.sendMessage({ type: "import-result", result: msg })
+    setPage("done")
+    setTimeout(() => window.close(), 1500)
     setImporting(false)
-  }, [currentPreview, editedName])
+  }, [previews, editedNames])
 
   return (
     <div className={styles.app}>
@@ -200,14 +221,14 @@ function App() {
               <input
                 className={styles.nameInput}
                 type="text"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
+                value={currentEditedName}
+                onChange={(e) => setEditedNames(prev => ({ ...prev, [currentIndex]: e.target.value }))}
                 placeholder="Skill name"
               />
             </div>
             <div className={styles.metaRow}>
               <span className={styles.metaLabel}>Source</span>
-              <span className={styles.metaValue}>local</span>
+              <span className={styles.metaValue}>{currentPreview.source || "local"}</span>
             </div>
             <div className={styles.metaRow}>
               <span className={styles.metaLabel}>Size</span>
@@ -254,7 +275,7 @@ function App() {
             <button
               className={styles.btnPrimary}
               onClick={handleConfirm}
-              disabled={!editedName.trim() || importing}
+              disabled={!currentEditedName.trim() || importing}
             >
               {importing ? "Importing..." : "Confirm Import"}
             </button>

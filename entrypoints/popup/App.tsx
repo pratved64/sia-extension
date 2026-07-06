@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from "react"
 import { useSkills } from "@/utils/hooks"
 import { addSkill, deleteSkill, hashContent } from "@/utils/skills"
+import { downloadBackup } from "@/utils/backup"
 import { db } from "@/utils/models/db"
 import type { ScrapedSkill } from "@/utils/scraper"
 import logoSrc from "@/assets/logo.txt?raw"
 import ImportButton from "@/components/ImportButton"
+import BackupButton from "@/components/BackupButton"
 import FilterBar from "@/components/FilterBar"
 import SkillList from "@/components/SkillList"
 import AddPrompt from "@/components/AddPrompt"
@@ -91,12 +93,22 @@ function App() {
     [],
   )
 
+  const handleBackup = useCallback(async () => {
+    const count = await downloadBackup()
+    if (count === null) {
+      showToast("Nothing to back up")
+    } else {
+      showToast(`Backed up ${count} ${count === 1 ? "skill" : "skills"}`)
+    }
+  }, [showToast])
+
   return (
     <div className={styles.app}>
       <div className={styles.header}>
         <pre className={styles.logo}>{logoSrc}</pre>
         <div className={styles.headerRow}>
           <ImportButton />
+          <BackupButton onBackup={handleBackup} />
           <FilterBar
             search={search}
             onSearchChange={setSearch}
