@@ -1,4 +1,4 @@
-# Sia
+# Skill Injection Application (SIA)
 
 ```
 ███████╗██╗ █████╗ 
@@ -11,12 +11,15 @@
 
 A browser extension for collecting, managing, and copying prompt skills from [skills.sh](https://skills.sh) to your clipboard.
 
-## Getting Started
+## Installation
 
 ```bash
 npm install
-npm run dev
+npm run build
+npm run build:firefox # for FireFox users
 ```
+
+Then, go to your browser's extension page, pick `Load Unpacked` and select the correct directory from the `.output` folder generated
 
 ## Stack
 
@@ -27,14 +30,12 @@ npm run dev
 ## Features
 
 - Import `.md`/`.txt` skill files from your local machine
-- Scrape skills directly from skills.sh pages — the content script detects skill pages and extracts the markdown content
+- Scrape skills directly from skills.sh pages
 - Copy skill content to clipboard with one click
-- Expandable cards with token estimates, origin badges (local/remote), and markdown preview
-- Duplicate detection via SHA-256 content hashing
 - Filter skills by name or origin (local/remote) via a combined search bar and dropdown
 - Import via drag-and-drop with preview, editable skill names, and duplicate warnings
-- Dark-themed UI using CSS custom properties (no shadows, minimal borders)
-- ASCII logo displayed in the popup and import window
+- Expandable cards with token estimates, origin badges (local/remote), and markdown preview
+- Duplicate detection via SHA-256 content hashing
 
 ## Project Structure
 
@@ -58,9 +59,9 @@ utils/
 ## Scripts
 
 ```bash
-npm run dev          # Start dev server (Chromium)
-npm run dev:firefox  # Start dev server (Firefox)
-npm run build        # Production build (Chromium)
-npm run build:firefox# Production build (Firefox)
-npm run compile      # TypeScript type-check
+npm run dev           # Start dev server (Chromium)
+npm run dev:firefox   # Start dev server (Firefox)
+npm run build         # Production build (Chromium)
+npm run build:firefox # Production build (Firefox)
+npm run compile       # TypeScript type-check
 ```
