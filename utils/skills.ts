@@ -41,4 +41,19 @@ async function deleteSkill(id: number): Promise<void> {
   console.log("[skills] deleteSkill — done")
 }
 
-export { addSkill, deleteSkill, hashContent }
+async function editSkill(
+  id: number,
+  name: string,
+  content: string,
+): Promise<{ skill: Skill | null; duplicateName?: string }> {
+  const hash = await hashContent(content)
+  const existing = await db.skills.where("hash").equals(hash).first()
+  if (existing && existing.id !== id) {
+    return { skill: null, duplicateName: existing.name }
+  }
+  await db.skills.update(id, { name, content, hash, savedAt: new Date() })
+  const saved = await db.skills.get(id)
+  return { skill: saved ?? null }
+}
+
+export { addSkill, deleteSkill, editSkill, hashContent }

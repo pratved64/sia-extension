@@ -6,11 +6,12 @@ interface SkillCardProps {
   skill: Skill
   onCopy: (content: string) => void
   onDelete: (id: number) => void
+  onEdit: (id: number) => void
 }
 
 const tokenEstimate = (text: string) => Math.ceil(text.length / 4)
 
-const SkillCard = ({ skill, onCopy, onDelete }: SkillCardProps) => {
+const SkillCard = ({ skill, onCopy, onDelete, onEdit }: SkillCardProps) => {
   const [expanded, setExpanded] = useState(false)
 
   const originBadgeClass =
@@ -63,6 +64,7 @@ const SkillCard = ({ skill, onCopy, onDelete }: SkillCardProps) => {
         </div>
         <div className={styles.cardActions}>
           <button className={styles.ghostButtonPrimary} onClick={() => onCopy(skill.content)}>Copy</button>
+          <button className={styles.ghostButtonMuted} onClick={() => onEdit(skill.id)}>Edit</button>
           <button className={styles.ghostButtonMuted} onClick={() => onDelete(skill.id)}>Delete</button>
         </div>
       </div>

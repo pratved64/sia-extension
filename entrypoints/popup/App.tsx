@@ -35,6 +35,11 @@ function App() {
         showToast(res.result)
       }
     })
+    browser.runtime.sendMessage({ type: "get-last-edit" }).then((res: any) => {
+      if (res?.result) {
+        showToast(res.result)
+      }
+    })
   }, [showToast])
 
   useEffect(() => {
@@ -102,6 +107,10 @@ function App() {
     }
   }, [showToast])
 
+  const handleEdit = useCallback((id: number) => {
+    browser.runtime.sendMessage({ type: "start-edit", skillId: id })
+  }, [])
+
   return (
     <div className={styles.app}>
       <div className={styles.header}>
@@ -129,6 +138,7 @@ function App() {
         skills={skills}
         onCopy={handleCopy}
         onDelete={handleDelete}
+        onEdit={handleEdit}
         emptyMessage={search || originFilter !== "all" ? "No matches found" : undefined}
       />
       <Toast

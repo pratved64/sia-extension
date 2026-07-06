@@ -6,10 +6,11 @@ interface SkillListProps {
   skills: Skill[]
   onCopy: (content: string) => void
   onDelete: (id: number) => void
+  onEdit: (id: number) => void
   emptyMessage?: string
 }
 
-const SkillList = ({ skills, onCopy, onDelete, emptyMessage }: SkillListProps) => {
+const SkillList = ({ skills, onCopy, onDelete, onEdit, emptyMessage }: SkillListProps) => {
   if (skills.length === 0) {
     return (
       <p className={styles.skillListEmpty}>
@@ -26,6 +27,7 @@ const SkillList = ({ skills, onCopy, onDelete, emptyMessage }: SkillListProps) =
           skill={skill}
           onCopy={onCopy}
           onDelete={onDelete}
+          onEdit={onEdit}
         />
       ))}
     </div>
