@@ -56,6 +56,8 @@ function App() {
           console.log("[App] Content script response:", skill ? skill.name : "null/undefined")
           if (!skill) return
 
+          if (skill.warning) showToast(skill.warning)
+
           const hash = await hashContent(skill.content)
           const existing = await db.skills.where("hash").equals(hash).first()
 

@@ -2,6 +2,7 @@ export interface ScrapedSkill {
   name: string
   content: string
   source: string
+  warning?: string
 }
 
 function findSkillSection(): HTMLElement | null {
@@ -69,13 +70,13 @@ function extractRestHtmlFromRSC(): string {
   return ""
 }
 
-async function expandSkillContent(): Promise<string> {
+async function expandSkillContent(): Promise<{ content: string; warning?: string }> {
   const previewContent = readSkillMdContent()
 
   const showMore = findShowMoreButton()
   if (!showMore) {
     console.log("[scraper] No Show more button — content is already expanded")
-    return previewContent
+    return { content: previewContent }
   }
 
   console.log("[scraper] Extracting rest content from RSC payload...")
@@ -84,11 +85,11 @@ async function expandSkillContent(): Promise<string> {
   if (restContent) {
     const fullContent = previewContent + "\n" + restContent
     console.log("[scraper] Full content assembled — length:", fullContent.length)
-    return fullContent
+    return { content: fullContent }
   }
 
   console.warn("[scraper] RSC extraction returned nothing, using preview only")
-  return previewContent
+  return { content: previewContent, warning: "Content may be truncated — check the skill" }
 }
 
 export async function scrapeSkillPage(): Promise<ScrapedSkill | null> {
@@ -111,12 +112,12 @@ export async function scrapeSkillPage(): Promise<ScrapedSkill | null> {
     return null
   }
 
-  const content = await expandSkillContent()
+  const { content, warning } = await expandSkillContent()
   if (!content) {
     console.warn("[scraper] No content extracted from SKILL.md section")
     return null
   }
 
   console.log("[scraper] Scraped — name:", name, "content length:", content.length)
-  return { name, content, source }
+  return { name, content, source, ...(warning ? { warning } : {}) }
 }
