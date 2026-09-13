@@ -19,6 +19,7 @@ Browser extension for collecting, managing, and copying prompt skills from [skil
 | DB schema | `utils/models/db.ts` — Skill: name, source, content, hash, savedAt, origin |
 | CRUD + hashing | `utils/skills.ts` |
 | Scraper logic | `utils/scraper.ts` — handles RSC payload "Show more" |
+| GitHub import | `utils/github.ts` — URL parsing, page-context Contents API discovery, raw-first blob fetch |
 | React hooks | `utils/hooks.ts` — `useSkills(search, originFilter)` live query |
 
 ## CSS Design System

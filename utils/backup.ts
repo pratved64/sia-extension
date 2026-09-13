@@ -57,11 +57,19 @@ interface ParsedFrontmatter {
   source: string
   origin: "local" | "remote"
   content: string
+  name: string
+}
+
+function unquote(value: string): string {
+  const quoted = value.match(/^"((?:[^"\\]|\\.)*)"$/)
+  if (!quoted) return value
+  return quoted[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\")
 }
 
 function parseFrontmatter(text: string): ParsedFrontmatter {
   let source = ""
   let origin: "local" | "remote" = "local"
+  let name = ""
   let content = text
 
   if (text.startsWith("---\n")) {
@@ -71,17 +79,18 @@ function parseFrontmatter(text: string): ParsedFrontmatter {
       content = text.slice(endIndex + 5)
 
       for (const line of block.split("\n")) {
-        const match = line.match(/^(\w+):\s+"((?:[^"\\]|\\.)*)"/)
+        const match = line.match(/^([\w-]+):\s*(.+?)\s*$/)
         if (!match) continue
         const key = match[1]
-        const value = match[2].replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+        const value = unquote(match[2])
         if (key === "source") source = value
         if (key === "origin" && (value === "local" || value === "remote")) origin = value
+        if (key === "name") name = value
       }
     }
   }
 
-  return { source, origin, content }
+  return { source, origin, content, name }
 }
 
 export { downloadBackup, parseFrontmatter }

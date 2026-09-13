@@ -262,6 +262,22 @@
   flex-shrink: 0;
 }
 
+.scanSpinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--text-muted);
+  animation: scanSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes scanSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ===== SkillList ===== */
 .skillListEmpty {
   text-align: center;

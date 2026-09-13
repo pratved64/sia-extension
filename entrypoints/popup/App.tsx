@@ -2,6 +2,15 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { useSkills } from "@/utils/hooks"
 import { addSkill, deleteSkill, hashContent } from "@/utils/skills"
 import { downloadBackup } from "@/utils/backup"
+import {
+  parseGitHubUrl,
+  scanGitHubPage,
+  fetchBlobSkillMd,
+  readPageSelection,
+  buildGitHubDraft,
+  deriveSkillName,
+  type GitHubRef,
+} from "@/utils/github"
 import { db } from "@/utils/models/db"
 import logoSrc from "@/assets/logo.txt?raw"
 import ImportButton from "@/components/ImportButton"
@@ -19,6 +28,10 @@ type ScrapeState =
   | { status: "failed"; name: string; source: string }
   | { status: "selecting"; name: string; source: string }
   | { status: "selected"; name: string; source: string; content: string; isDuplicate: boolean }
+  | { status: "github-scanning"; scope: string }
+  | { status: "github-many"; owner: string; repo: string; count: number }
+  | { status: "github-empty"; owner: string; repo: string; scanned: number }
+  | { status: "github-unreachable"; owner: string; repo: string; reason: string }
 
 function parsePageFromUrl(url: string): { name: string; source: string } | null {
   const match = url.match(/skills\.sh\/([^/]+)\/([^/]+)\/([^/]+)/)
@@ -33,10 +46,101 @@ function App() {
   const [toast, setToast] = useState<{ message: string; key: number } | null>(null)
   const [scrapeState, setScrapeState] = useState<ScrapeState>({ status: "idle" })
   const tabIdRef = useRef<number | null>(null)
+  const tabKindRef = useRef<"skills" | "github">("skills")
 
   const showToast = useCallback((message: string) => {
     setToast({ message, key: Date.now() })
   }, [])
+
+  const githubScanReason = useCallback((status: number): string => {
+    if (status === 404) return "Not found — private repository or missing page."
+    if (status === 403) return "GitHub API rate limit reached — try again later."
+    if (status === 0) return "Couldn't decode the skill file."
+    return `GitHub API error ${status}.`
+  }, [])
+
+  const runGitHubScan = useCallback(async (tabId: number, gh: GitHubRef) => {
+    try {
+      if (gh.kind === "blob") {
+        const [injection] = await browser.scripting.executeScript({
+          target: { tabId },
+          func: fetchBlobSkillMd,
+          args: [{ owner: gh.owner, repo: gh.repo, ref: gh.ref, path: gh.path }],
+        })
+        const blob = injection?.result
+        const markdown = blob?.markdown?.trim() ?? ""
+        console.info(
+          `[github] blob ${gh.owner}/${gh.repo}/${gh.path} via=${blob?.via ?? "unknown"}` +
+            (blob?.via === "dom" && blob?.rawError ? ` rawError=${blob.rawError}` : ""),
+        )
+        if (!markdown) {
+          setScrapeState({
+            status: "failed",
+            name: deriveSkillName(gh.path, gh.repo),
+            source: `${gh.owner}/${gh.repo}`,
+          })
+          return
+        }
+        const draft = buildGitHubDraft(gh.owner, gh.repo, gh.path, markdown)
+        const hash = await hashContent(draft.content)
+        const existing = await db.skills.where("hash").equals(hash).first()
+        setScrapeState({
+          status: "scraped",
+          name: draft.name,
+          source: draft.source,
+          content: draft.content,
+          isDuplicate: !!existing,
+        })
+        return
+      }
+
+      const [injection] = await browser.scripting.executeScript({
+        target: { tabId },
+        func: scanGitHubPage,
+        args: [{ owner: gh.owner, repo: gh.repo, ref: gh.ref, path: gh.path }],
+      })
+      const result = injection?.result
+      if (!result) {
+        setScrapeState({
+          status: "github-unreachable",
+          owner: gh.owner,
+          repo: gh.repo,
+          reason: "Couldn't read this page.",
+        })
+        return
+      }
+      if (result.outcome === "single") {
+        const draft = buildGitHubDraft(gh.owner, gh.repo, result.skillPath, result.markdown)
+        const hash = await hashContent(draft.content)
+        const existing = await db.skills.where("hash").equals(hash).first()
+        setScrapeState({
+          status: "scraped",
+          name: draft.name,
+          source: draft.source,
+          content: draft.content,
+          isDuplicate: !!existing,
+        })
+      } else if (result.outcome === "many") {
+        setScrapeState({ status: "github-many", owner: gh.owner, repo: gh.repo, count: result.count })
+      } else if (result.outcome === "none") {
+        setScrapeState({ status: "github-empty", owner: gh.owner, repo: gh.repo, scanned: result.scanned })
+      } else {
+        setScrapeState({
+          status: "github-unreachable",
+          owner: gh.owner,
+          repo: gh.repo,
+          reason: githubScanReason(result.status),
+        })
+      }
+    } catch {
+      setScrapeState({
+        status: "github-unreachable",
+        owner: gh.owner,
+        repo: gh.repo,
+        reason: "Couldn't run on this tab.",
+      })
+    }
+  }, [githubScanReason])
 
   useEffect(() => {
     browser.runtime.sendMessage({ type: "get-last-import" }).then((res: any) => {
@@ -51,43 +155,55 @@ function App() {
     browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
       const tab = tabs[0]
       if (!tab?.url || !tab.id) return
-      if (!/^https?:\/\/(www\.)?skills\.sh\//.test(tab.url)) return
+      if (/^https?:\/\/(www\.)?skills\.sh\//.test(tab.url)) {
+        tabIdRef.current = tab.id
+        tabKindRef.current = "skills"
+        setScrapeState({ status: "scraping" })
 
-      tabIdRef.current = tab.id
-      setScrapeState({ status: "scraping" })
+        const pageInfo = parsePageFromUrl(tab.url)
 
-      const pageInfo = parsePageFromUrl(tab.url)
+        browser.tabs
+          .sendMessage(tab.id, { type: "scrape-skill" })
+          .then(async (skill: any) => {
+            if (!skill) {
+              if (pageInfo) {
+                setScrapeState({ status: "failed", name: pageInfo.name, source: pageInfo.source })
+              }
+              return
+            }
 
-      browser.tabs
-        .sendMessage(tab.id, { type: "scrape-skill" })
-        .then(async (skill: any) => {
-          if (!skill) {
+            if (skill.warning) showToast(skill.warning)
+
+            const hash = await hashContent(skill.content)
+            const existing = await db.skills.where("hash").equals(hash).first()
+
+            setScrapeState({
+              status: "scraped",
+              name: skill.name,
+              source: skill.source,
+              content: skill.content,
+              isDuplicate: !!existing,
+            })
+          })
+          .catch(() => {
             if (pageInfo) {
               setScrapeState({ status: "failed", name: pageInfo.name, source: pageInfo.source })
             }
-            return
-          }
-
-          if (skill.warning) showToast(skill.warning)
-
-          const hash = await hashContent(skill.content)
-          const existing = await db.skills.where("hash").equals(hash).first()
-
-          setScrapeState({
-            status: "scraped",
-            name: skill.name,
-            source: skill.source,
-            content: skill.content,
-            isDuplicate: !!existing,
           })
-        })
-        .catch(() => {
-          if (pageInfo) {
-            setScrapeState({ status: "failed", name: pageInfo.name, source: pageInfo.source })
-          }
-        })
+        return
+      }
+
+      const gh = parseGitHubUrl(tab.url)
+      if (!gh || gh.kind === "other") return
+      if (gh.kind === "blob" && !gh.isSkillMd) return
+
+      tabIdRef.current = tab.id
+      tabKindRef.current = "github"
+      const scope = gh.kind === "blob" ? "SKILL.md" : `${gh.owner}/${gh.repo}${gh.path ? `/${gh.path}` : ""}`
+      setScrapeState({ status: "github-scanning", scope })
+      runGitHubScan(tab.id, gh)
     })
-  }, [])
+  }, [runGitHubScan, showToast])
 
   const handleAdd = useCallback(async () => {
     let name: string, source: string, content: string
@@ -112,7 +228,9 @@ function App() {
     if (!tabId) return
 
     setScrapeState({ status: "selecting", name: scrapeState.name, source: scrapeState.source })
-    browser.tabs.sendMessage(tabId, { type: "show-selection-ui" }).catch(() => {})
+    if (tabKindRef.current === "skills") {
+      browser.tabs.sendMessage(tabId, { type: "show-selection-ui" }).catch(() => {})
+    }
   }, [scrapeState])
 
   const handleCaptureSelection = useCallback(async () => {
@@ -120,8 +238,10 @@ function App() {
     if (!tabId || scrapeState.status !== "selecting") return
 
     try {
-      const res = await browser.tabs.sendMessage(tabId, { type: "get-selection" }) as { content: string }
-      const content = res?.content?.trim() ?? ""
+      const content =
+        tabKindRef.current === "github"
+          ? ((await browser.scripting.executeScript({ target: { tabId }, func: readPageSelection }))[0]?.result?.trim() ?? "")
+          : (((await browser.tabs.sendMessage(tabId, { type: "get-selection" })) as { content: string })?.content?.trim() ?? "")
 
       if (!content) {
         showToast("No text selected — try selecting again")
@@ -222,6 +342,57 @@ function App() {
             </button>
             <button className={styles.ghostButtonMuted} onClick={handleDismiss}>
               Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {scrapeState.status === "github-scanning" && (
+        <div className={styles.manualFallback}>
+          <div className={styles.manualFallbackText}>
+            Scanning {scrapeState.scope} for SKILL.md…
+          </div>
+          <span className={styles.scanSpinner} aria-hidden="true" />
+        </div>
+      )}
+
+      {scrapeState.status === "github-many" && (
+        <div className={styles.manualFallback}>
+          <div className={styles.manualFallbackText}>
+            {scrapeState.count} skills found in {scrapeState.owner}/{scrapeState.repo}
+            <br />
+            Open a SKILL.md file page to add it.
+          </div>
+          <div className={styles.manualFallbackActions}>
+            <button className={styles.ghostButtonMuted} onClick={handleDismiss}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {scrapeState.status === "github-empty" && (
+        <div className={styles.manualFallback}>
+          <div className={styles.manualFallbackText}>
+            No SKILL.md found in {scrapeState.owner}/{scrapeState.repo} (scanned {scrapeState.scanned}{" "}
+            {scrapeState.scanned === 1 ? "file" : "files"}).
+            <br />
+            Try a subfolder or a SKILL.md file page.
+          </div>
+          <div className={styles.manualFallbackActions}>
+            <button className={styles.ghostButtonMuted} onClick={handleDismiss}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {scrapeState.status === "github-unreachable" && (
+        <div className={styles.manualFallback}>
+          <div className={styles.manualFallbackText}>{scrapeState.reason}</div>
+          <div className={styles.manualFallbackActions}>
+            <button className={styles.ghostButtonMuted} onClick={handleDismiss}>
+              Dismiss
             </button>
           </div>
         </div>
