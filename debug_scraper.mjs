@@ -160,18 +160,34 @@ function extractRestHtmlFromRSC(payloads) {
   return { text, entryId, strategy: "combined-slice" }
 }
 
+function joinSkillContent(preview, rest) {
+  if (!preview) return { content: rest, mode: "rest-only" }
+  if (!rest) return { content: preview, mode: "preview-only" }
+  if (rest.includes(preview) || preview.includes(rest)) {
+    return {
+      content: rest.length >= preview.length ? rest : preview,
+      mode: "contained",
+    }
+  }
+  return { content: `${preview}\n${rest}`, mode: "concatenated" }
+}
+
 async function expandSkillContent() {
   const previewContent = readSkillMdContent()
   const showMore = findShowMoreButton()
-  if (!showMore) return { content: previewContent, previewContent, restText: "", strategy: "no-show-more" }
+  if (!showMore) return { content: previewContent, previewContent, restText: "", strategy: "no-show-more", mode: "preview-only" }
   const { payloads } = collectRscPayloads()
   const { text: restText, strategy } = extractRestHtmlFromRSC(payloads)
-  if (restText) return { content: restText, previewContent, restText, strategy }
+  if (restText) {
+    const { content, mode } = joinSkillContent(previewContent, restText)
+    return { content, previewContent, restText, strategy, mode }
+  }
   return {
     content: previewContent,
     previewContent,
     restText: "",
     strategy,
+    mode: "preview-only",
     warning: "Content may be truncated — check the skill",
   }
 }
@@ -192,12 +208,12 @@ async function scrapeSkillPage() {
     console.warn("[scraper] SKILL.md section not found on page")
     return null
   }
-  const { content, warning, previewContent, restText, strategy } = await expandSkillContent()
+  const { content, warning, previewContent, restText, strategy, mode } = await expandSkillContent()
   if (!content) {
     console.warn("[scraper] No content extracted from SKILL.md section")
     return null
   }
-  return { name, source, content, warning, previewContent, restText, strategy }
+  return { name, source, content, warning, previewContent, restText, strategy, mode }
 }
 
 const { payloads, failures } = collectRscPayloads()
@@ -223,6 +239,7 @@ console.log("\n=== SCRAPE RESULT ===")
 console.log("name:", result.name)
 console.log("source:", result.source)
 console.log("strategy:", result.strategy)
+console.log("joined:", result.mode)
 console.log("preview length:", result.previewContent.length)
 console.log("rest text length:", result.restText.length)
 console.log("final content length:", result.content.length)
