@@ -238,6 +238,30 @@
   color: var(--text-muted);
 }
 
+/* ===== Manual Fallback ===== */
+.manualFallback {
+  background: var(--bg-card);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manualFallbackText {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.manualFallbackActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 /* ===== SkillList ===== */
 .skillListEmpty {
   text-align: center;

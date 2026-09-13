@@ -90,7 +90,7 @@ for (let i = 0; i < payloads.length; i++) {
 
 // ── 5. Find restHtml reference ──
 console.log(`\n[STEP 5] Searching for restHtml reference ...`)
-const combined = payloads.join("")
+const combined = payloads.join("\n")
 const restMatch = combined.match(/"restHtml"\s*:\s*"\$(\w+)"/)
 
 if (!restMatch) {
@@ -120,25 +120,20 @@ console.log(`\n[STEP 6] Looking for entry definition '${entryId}:T...' ...`)
 let foundEntry = false
 let restHtml = ""
 
-const entryDef = new RegExp(`\\b${entryId}:T[0-9a-f]+,`)
-for (let i = 0; i < payloads.length - 1; i++) {
-  if (entryDef.test(payloads[i])) {
-    foundEntry = true
-    restHtml = payloads[i + 1] || ""
-    console.log(`  ✅ Found at payloads[${i}]: ${payloads[i]}`)
-    console.log(`  Content payloads[${i + 1}]: ${restHtml.length} chars`)
-    console.log(`  Content preview: ${restHtml.slice(0, 100).replace(/\n/g, "\\n")}`)
-    break
-  }
-}
+const entryDef = new RegExp(`\\b${entryId}:T([0-9a-f]+),`)
+const defMatch = combined.match(entryDef)
 
-if (!foundEntry) {
-  console.log(`  ❌ Entry definition '${entryId}:T...' not found in payloads`)
-  // Search for any occurrence of the entry ID in payloads
-  const similar = payloads.filter((p) => p.includes(`${entryId}:T`))
-  console.log(`  Payloads containing '${entryId}:T':`, similar)
+if (!defMatch) {
+  console.log(`  ❌ Entry definition '${entryId}:T...' not found in combined payloads`)
   process.exit(0)
 }
+
+foundEntry = true
+const contentStart = defMatch.index + defMatch[0].length
+restHtml = combined.slice(contentStart).trim()
+console.log(`  ✅ Found entry definition at offset ${defMatch.index}`)
+console.log(`  Content: ${restHtml.length} chars`)
+console.log(`  Preview: ${restHtml.slice(0, 100).replace(/\n/g, "\\n")}`)
 
 if (!restHtml || restHtml.length < 10) {
   console.log(`  ❌ Content too short (${restHtml?.length || 0} chars)`)

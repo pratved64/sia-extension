@@ -3,6 +3,12 @@ import { scrapeSkillPage, type ScrapedSkill } from "@/utils/scraper"
 let scraping = false
 let pendingScrape: Promise<ScrapedSkill | null> | null = null
 
+function getSelectedText(): string {
+  const selection = window.getSelection()
+  if (!selection || selection.isCollapsed) return ""
+  return selection.toString().trim()
+}
+
 export default defineContentScript({
   matches: ["*://www.skills.sh/*", "*://skills.sh/*"],
   main() {
@@ -10,6 +16,17 @@ export default defineContentScript({
 
     browser.runtime.onMessage.addListener((message: any) => {
       console.log("[content] Message received:", message.type)
+
+      if (message.type === "get-selection") {
+        const text = getSelectedText()
+        console.log("[content] get-selection returning", text.length, "chars")
+        return Promise.resolve({ content: text })
+      }
+
+      if (message.type === "show-selection-ui") {
+        console.log("[content] Selection mode acknowledged")
+        return Promise.resolve({ ready: true })
+      }
 
       if (message.type !== "scrape-skill") return
 

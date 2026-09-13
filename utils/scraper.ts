@@ -50,24 +50,23 @@ function extractRestHtmlFromRSC(): string {
 
   if (payloads.length === 0) return ""
 
-  const combined = payloads.join("")
+  const combined = payloads.join("\n")
   const restMatch = combined.match(/"restHtml"\s*:\s*"\$(\w+)"/)
   if (!restMatch) return ""
 
   const entryId = restMatch[1]
+  const entryDef = new RegExp(`\\b${entryId}:T([0-9a-f]+),`)
+  const defMatch = combined.match(entryDef)
+  if (!defMatch || defMatch.index === undefined) return ""
 
-  const entryDef = new RegExp(`\\b${entryId}:T[0-9a-f]+,`)
-  for (let i = 0; i < payloads.length - 1; i++) {
-    if (entryDef.test(payloads[i])) {
-      const html = payloads[i + 1]
-      if (!html || html.length < 10) continue
-      const div = document.createElement("div")
-      div.innerHTML = html
-      return div.textContent?.trim() || ""
-    }
-  }
+  const contentStart = defMatch.index + defMatch[0].length
+  const content = combined.slice(contentStart).trim()
 
-  return ""
+  if (content.length < 10) return ""
+
+  const div = document.createElement("div")
+  div.innerHTML = content
+  return div.textContent?.trim() || ""
 }
 
 async function expandSkillContent(): Promise<{ content: string; warning?: string }> {
@@ -75,20 +74,15 @@ async function expandSkillContent(): Promise<{ content: string; warning?: string
 
   const showMore = findShowMoreButton()
   if (!showMore) {
-    console.log("[scraper] No Show more button — content is already expanded")
     return { content: previewContent }
   }
 
-  console.log("[scraper] Extracting rest content from RSC payload...")
   const restContent = extractRestHtmlFromRSC()
 
   if (restContent) {
-    const fullContent = previewContent + "\n" + restContent
-    console.log("[scraper] Full content assembled — length:", fullContent.length)
-    return { content: fullContent }
+    return { content: restContent }
   }
 
-  console.warn("[scraper] RSC extraction returned nothing, using preview only")
   return { content: previewContent, warning: "Content may be truncated — check the skill" }
 }
 
