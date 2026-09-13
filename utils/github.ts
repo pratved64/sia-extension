@@ -83,11 +83,19 @@ interface GitHubBlobInput {
 
 interface GitHubBlobResult {
   markdown: string
-  via: "raw" | "dom"
+  via: "raw" | "api" | "dom"
   rawError?: string
+  apiError?: string
 }
 
 async function fetchBlobSkillMd(input: GitHubBlobInput): Promise<GitHubBlobResult> {
+  function decodeB64(b64: string): string {
+    const bin = atob(b64.replace(/\s/g, ""))
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    return new TextDecoder().decode(bytes)
+  }
+
   const encoded = input.path.split("/").map(encodeURIComponent).join("/")
   let rawError: string | undefined
   try {
@@ -102,11 +110,63 @@ async function fetchBlobSkillMd(input: GitHubBlobInput): Promise<GitHubBlobResul
   } catch (err) {
     rawError = err instanceof Error ? `${err.name}: ${err.message}` : "raw-threw"
   }
+
+  let apiError: string | undefined
+  try {
+    const apiUrl = `https://api.github.com/repos/${input.owner}/${input.repo}/contents/${encoded}?ref=${encodeURIComponent(input.ref)}`
+    const res = await fetch(apiUrl, { headers: { Accept: "application/vnd.github+json" } })
+    if (res.ok) {
+      const json = await res.json()
+      if (typeof json?.content === "string") {
+        const text = decodeB64(json.content).trim()
+        if (text.length >= 10) return { markdown: text, via: "api", rawError }
+        apiError = "api-empty"
+      } else {
+        apiError = "api-no-content"
+      }
+    } else {
+      apiError = `api-http-${res.status}`
+    }
+  } catch (err) {
+    apiError = err instanceof Error ? `${err.name}: ${err.message}` : "api-threw"
+  }
+
+  const scripts = document.querySelectorAll('script[type="application/json"]')
+  for (const script of scripts) {
+    const text = script.textContent
+    if (!text || !text.includes("rawLines")) continue
+    try {
+      const data = JSON.parse(text)
+      const payload = data?.payload
+      let rawLines: string[] | undefined
+      if (payload) {
+        if (Array.isArray(payload["codeViewBlobLayoutRoute.StyledBlob"]?.rawLines)) {
+          rawLines = payload["codeViewBlobLayoutRoute.StyledBlob"].rawLines
+        } else {
+          for (const key of Object.keys(payload)) {
+            if (Array.isArray(payload[key]?.rawLines)) {
+              rawLines = payload[key].rawLines
+              break
+            }
+          }
+        }
+      }
+      if (Array.isArray(rawLines) && rawLines.length > 0) {
+        return {
+          markdown: rawLines.join("\n").trim(),
+          via: "dom",
+          rawError,
+          apiError,
+        }
+      }
+    } catch {}
+  }
+
   const root =
     document.querySelector('[data-testid="markdown-body"]') ??
     document.querySelector("article.markdown-body") ??
     document.querySelector(".markdown-body")
-  return { markdown: root?.textContent?.trim() ?? "", via: "dom", rawError }
+  return { markdown: root?.textContent?.trim() ?? "", via: "dom", rawError, apiError }
 }
 
 function readPageSelection(): string {

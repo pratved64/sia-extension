@@ -71,7 +71,8 @@ function App() {
         const markdown = blob?.markdown?.trim() ?? ""
         console.info(
           `[github] blob ${gh.owner}/${gh.repo}/${gh.path} via=${blob?.via ?? "unknown"}` +
-            (blob?.via === "dom" && blob?.rawError ? ` rawError=${blob.rawError}` : ""),
+            (blob?.rawError ? ` rawError=${blob.rawError}` : "") +
+            (blob?.apiError ? ` apiError=${blob.apiError}` : ""),
         )
         if (!markdown) {
           setScrapeState({
